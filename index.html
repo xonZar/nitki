@@ -47,14 +47,58 @@ html{scroll-behavior:smooth}
  .two{grid-template-columns:repeat(2,minmax(0,1fr))}
  .threadtools button{font-size:11px}
 }
+
+/* Full-screen mobile studio: picture remains stationary while adjustments scroll below. */
+.mobile-studio{display:none}
+@media(max-width:800px){
+ :root{--mobile-top:56px;--mobile-preview:clamp(270px,45dvh,430px)}
+ html,body{min-width:0;overflow-x:hidden}
+ body{padding-bottom:calc(80px + env(safe-area-inset-bottom,0px))}
+ header{height:var(--mobile-top);min-height:var(--mobile-top);position:fixed;left:0;right:0;top:0;z-index:60}
+ .mobile-studio{position:fixed;top:var(--mobile-top);left:0;right:0;height:var(--mobile-preview);z-index:40;display:flex;flex-direction:column;overflow:hidden;background:#fff;border-bottom:1px solid #e3ded4;box-shadow:0 5px 18px #352a1c13;padding:7px 12px 8px}
+ .mobile-studio-top{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:12px;color:#38332b;min-height:22px}
+ .mobile-studio-top span{font-size:11px;color:#8e877b}
+ .mobile-canvas-box{position:relative;min-height:0;flex:1;display:flex;align-items:center;justify-content:center;overflow:hidden;background:#faf9f6;border:1px solid #ebe4d9;border-radius:12px;margin:3px 0 6px}
+ .mobile-canvas-box canvas{display:block;width:100%;height:100%;object-fit:contain}
+ #mobileEmpty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:20px;color:#8c8377;font-size:12px;background:#faf9f6}
+ #mobileEmpty[hidden]{display:none}
+ .mobile-switch{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;flex:none}
+ .mobile-switch button{background:#f5f1eb;border:1px solid #ebe3d8;border-radius:8px;min-height:33px;color:#6d6256;font-weight:750;font-size:11px}
+ .mobile-switch button.active{background:#fef0e8;border-color:#efb494;color:#c45d2c}
+ .mobile-layers{display:flex;gap:6px;overflow-x:auto;max-width:100%;min-height:38px;flex:none;padding:5px 0 1px;align-items:stretch;scrollbar-width:thin}
+ .mobile-layers>span{font-size:11px;color:#928a7d;align-self:center}
+ .mobile-layer{border:1px solid #e8dfd6;background:#fff;display:flex;gap:5px;align-items:center;border-radius:9px;padding:3px 6px;min-width:125px;max-width:150px}
+ .mobile-layer input[type=color]{border:0;padding:0;width:28px;height:28px;background:transparent;flex:none}
+ .mobile-layer .mobile-thread-select{max-width:71px;min-width:48px;font-size:10px!important;min-height:28px!important;padding:2px!important;border:1px solid #e6dcd2;border-radius:6px}.mobile-layer input[type=checkbox]{accent-color:var(--a);width:16px;height:16px;flex:none}
+ .mobile-layer span{font-size:10px;color:#565046;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+ main{padding-top:calc(var(--mobile-top) + var(--mobile-preview) + 12px)!important}
+ .layout{display:flex;flex-direction:column}
+ #uploadPanel{order:1}
+ #threadsPanel{order:2}
+ #resultPanel{order:3}
+ .layout>.panel{scroll-margin-top:calc(var(--mobile-top) + var(--mobile-preview) + 9px)}
+ .layout>.panel:has(.canvases){margin-bottom:8px}
+ #resultPanel .canvases{grid-template-columns:1fr}
+ #resultPanel .work{min-width:0}
+ .hero h1{font-size:21px}
+ .hero p,.hero .sub{font-size:12px}
+ .mobile-dock{z-index:70}
+}
+@media(max-width:390px){:root{--mobile-preview:clamp(260px,43dvh,380px)} .mobile-studio{padding-left:8px;padding-right:8px}}
 </style></head><body>
 <header><div class="brand">нитка<i>.</i> <span style="font-size:10px;letter-spacing:1px;color:#999;font-weight:700">STUDIO 9</span></div><div class="chip">Aurora Style 600 · DST · собственная палитра ниток</div></header>
+<section class="mobile-studio" id="mobileStudio" aria-label="Закреплённый предпросмотр вышивки">
+  <div class="mobile-studio-top"><strong>Предпросмотр вышивки</strong><span id="mobileState">Загрузи фото</span></div>
+  <div class="mobile-canvas-box"><canvas id="mobileCanvas" width="600" height="600"></canvas><div id="mobileEmpty">Загрузи изображение — результат появится здесь</div></div>
+  <div class="mobile-switch"><button class="active" data-mobile-view="stitches">Стежки</button><button data-mobile-view="paint">Цвета</button><button data-mobile-view="original">Фото</button><button data-mobile-view="mask">Контур</button></div>
+  <div class="mobile-layers" id="mobileLayers"><span>После обработки здесь появятся нитки дизайна</span></div>
+</section>
 <nav class="mobile-dock" aria-label="Быстрые действия"><button type="button" id="mobUpload"><span class="dock-icon">＋</span>Фото</button><button type="button" id="mobPreview"><span class="dock-icon">▣</span>Результат</button><button type="button" id="mobThreads"><span class="dock-icon">◉</span>Нитки</button><button type="button" id="mobDownload" class="is-primary" disabled><span class="dock-icon">↓</span>DST</button></nav><main><h1>Вышивка по форме картинки, а не по белому фону.</h1><p class="sub">Загрузи фото: сайт уберёт внешний фон, автоматически обрежет изображение по объекту и построит вышивку внутри найденного силуэта. Если маска ошиблась, поправь её кистью.</p>
 <div class="layout"><aside class="panel" id="uploadPanel"><div class="eyebrow">01 / ИЗОБРАЖЕНИЕ</div><label class="drop" id="drop" for="upload"><div class="upload">⇧</div><strong id="filename">Перетащи или выбери картинку</strong><small>PNG / JPG / WEBP до 15 МБ</small></label><input type="file" id="upload" accept="image/*" hidden><div class="stack"><button class="button" id="demo">Открыть слона</button></div><div class="eyebrow" style="margin-top:27px">02 / ПОДГОТОВКА</div><div class="field"><label>Пяльцы</label><select id="hoop"><option value="120,180">120 × 180 мм</option><option value="50,70">50 × 70 мм</option></select></div><div class="two"><div class="field"><label>Ширина <span>мм</span></label><input type="number" id="width" value="105" min="10" max="120"></div><div class="field"><label>Высота <span>авто</span></label><input id="height" disabled value="—"></div></div><div class="field"><label>Цветов в авторежиме <span id="colorNum">7</span></label><input type="range" id="colors" min="2" max="12" value="7"></div><div class="field"><label>Детализация <span id="detailNum">4 / 5</span></label><input type="range" id="detail" min="1" max="5" value="4"></div><div class="field"><label>Расстояние между рядами <span id="spacingNum">0,45 мм</span></label><input type="range" id="spacing" min="0.35" max="0.9" value="0.45" step="0.05"></div><div class="field"><label>Чувствительность удаления фона <span id="thresholdNum">238</span></label><input type="range" id="threshold" min="205" max="254" value="238"></div><label class="check">Удалить внешний фон <input type="checkbox" id="removeBg" checked></label><label class="check">Контур по силуэту <input type="checkbox" id="outline" checked></label><div class="stack" style="margin-top:20px"><button class="button dark" id="dst" disabled>Скачать файл DST</button><button class="button" id="png" disabled>Сохранить PNG предпросмотра</button></div><div class="note">Сайт строит технический файл вышивки, но автоматическая оцифровка фото пока экспериментальная. Сначала проверь DST в программе просмотра и на пробной ткани.</div></aside>
 <section class="panel" id="resultPanel"><div class="preview-head"><div><div class="eyebrow" style="margin-bottom:5px">03 / РЕЗУЛЬТАТ</div><h2>Без пустых белых краёв</h2></div><span class="status" id="status">Загрузи фото</span></div><div class="tabs"><button data-view="stitches" class="active">Стежки</button><button data-view="paint">Цветная заливка</button><button data-view="original">Исходник</button><button data-view="mask">Граница объекта</button></div><div class="tools"><button data-tool="none" class="on">Просмотр</button><button data-tool="add">+ Вернуть область</button><button data-tool="erase">− Стереть фон</button><button id="undo">↶ Отменить кисть</button><button id="reset">↺ Автомаска</button><span style="font-size:11px;color:#8b8479;align-self:center">Размер кисти <input id="brush" type="range" min="3" max="30" value="12" style="width:90px;vertical-align:middle"></span></div><div class="canvases"><div class="work"><div class="worktitle">Исходник + маска</div><canvas id="left" width="600" height="600"></canvas><small>Оранжевая граница — то, что попадёт в вышивку. Кистью исправляй маску.</small></div><div class="work"><div class="worktitle">Будущая вышивка</div><canvas id="right" width="600" height="600"></canvas><small>Вид по рассчитанным командам; белый фон не вышивается.</small></div></div><div class="stats"><div class="stat"><strong id="stCount">—</strong><span>стежков</span></div><div class="stat"><strong id="coCount">—</strong><span>ниток</span></div><div class="stat"><strong id="juCount">—</strong><span>переходов</span></div><div class="stat"><strong id="szCount">—</strong><span>габариты</span></div></div><div class="timeline"><div style="display:flex;justify-content:space-between"><span>Ход вышивания</span><span id="playNum">100%</span></div><input type="range" id="play" min="0" max="100" value="100" disabled></div><div class="note" id="note">Теперь граница вычисляется по внешнему силуэту, а не по прямоугольнику фотографии. Светлые детали внутри объекта сохраняются.</div></section>
 <aside class="panel right" id="threadsPanel"><div class="eyebrow">04 / МОИ НИТКИ</div>
-<div class="field"><label>Как подбирать цвета</label><select id="paletteMode"><option value="mine" selected>Только из моей палитры</option><option value="auto">Автоматические цвета</option></select></div>
-<p class="threadintro">Отметь галочками только катушки, которые у тебя есть. Сайт будет использовать <b>исключительно их цвета</b> для заливки и контура.</p>
+<div class="field"><label>Как подбирать цвета</label><select id="paletteMode"><option value="mine" selected>Автоподбор из моих ниток</option><option value="auto">Автоподбор цветов по картинке</option><option value="manual">Ручной выбор цвета каждого слоя</option></select></div>
+<p class="threadintro">В режиме автоподбора из моих ниток используются только отмеченные катушки. В ручном режиме можно отдельно назначить оттенок каждому слою.</p>
 <div class="threadeditor"><input type="color" id="threadColor" value="#8f8275" title="Цвет нитки"><input type="text" id="threadName" maxlength="40" placeholder="Название / номер нитки"><button id="threadAdd" class="button" type="button">+ Добавить</button></div>
 <div class="threadtools"><button id="threadAll" type="button">Выбрать все</button><button id="threadNone" type="button">Снять выбор</button></div>
 <div id="threadStock" class="threadstock"></div>
@@ -190,7 +234,14 @@ function palette(){
     info.append(sel);
     let sw=document.createElement('span');sw.style.cssText='width:32px;height:32px;border-radius:7px;border:1px solid #ddd;flex-shrink:0;background:'+rgbhex(c.rgb);div.append(sw,info);
   }else{
-    let picker=document.createElement('input');picker.type='color';picker.value=rgbhex(c.rgb);picker.onchange=()=>{c.rgb=hexrgb(picker.value);build(false)};div.append(picker,info)
+    let picker=document.createElement('input');picker.type='color';picker.value=rgbhex(c.rgb);picker.oninput=()=>{c.rgb=hexrgb(picker.value);c.name='Нитка '+(i+1);build(false)};div.append(picker,info);
+    if($('paletteMode').value==='manual'&&selectedThreads().length){
+      let sel=document.createElement('select');sel.title='Выбрать свою катушку';sel.style.width='100%';sel.style.fontSize='12px';
+      let placeholder=document.createElement('option');placeholder.value='';placeholder.textContent='Назначить мою нитку…';sel.append(placeholder);
+      for(const t of selectedThreads()){let opt=document.createElement('option');opt.value=t.rgb;opt.textContent=t.name+' ('+t.rgb+')';sel.append(opt)}
+      sel.onchange=()=>{if(!sel.value)return;let t=selectedThreads().find(t=>t.rgb===sel.value);if(t){c.rgb=hexrgb(t.rgb);c.name=t.name;build(false)}};
+      info.append(sel);
+    }
   }
   let chk=document.createElement('input');chk.type='checkbox';chk.checked=c.enabled;chk.onchange=()=>{c.enabled=chk.checked;build(false)};div.append(chk);root.append(div)
  }
@@ -224,5 +275,57 @@ paintBg(lc);paintBg(rc);
    if(window.matchMedia('(max-width:800px)').matches) setTimeout(()=>move('resultPanel'),700);
  });
  sync();
+})();
+
+/* -------- Mobile Studio 10: pinned preview and immediate per-layer color editing -------- */
+(function(){
+ const mobile=document.getElementById('mobileCanvas'), mx=mobile.getContext('2d');
+ const row=document.getElementById('mobileLayers');
+ const empty=document.getElementById('mobileEmpty');
+ const state=document.getElementById('mobileState');
+ function mobileDraw(){
+   if(!mobile)return;
+   mx.clearRect(0,0,mobile.width,mobile.height);
+   mx.drawImage(right,0,0,mobile.width,mobile.height);
+   empty.hidden=!!raw;
+   state.textContent=raw?(document.getElementById('stCount').textContent+' стежков'):'Загрузи фото';
+ }
+ function layerButtons(){
+   row.replaceChildren();
+   if(!raw||!colors.length){const hint=document.createElement('span');hint.textContent='После обработки здесь появятся нитки дизайна';row.append(hint);return;}
+   colors.forEach((layer,index)=>{
+     const block=document.createElement('div');block.className='mobile-layer';
+     const number=document.createElement('span');number.textContent=layer.name||'Нитка '+(index+1);number.title=number.textContent;
+     let colorControl;
+     if(document.getElementById('paletteMode').value==='mine' && selectedThreads().length){
+       const select=document.createElement('select');select.className='mobile-thread-select';select.setAttribute('aria-label','Катушка для слоя '+(index+1));
+       for(const thread of selectedThreads()){
+         const opt=document.createElement('option');opt.value=thread.rgb;opt.textContent=thread.name;select.append(opt);
+       }
+       select.value=rgbhex(layer.rgb);
+       select.addEventListener('change',()=>{const thread=selectedThreads().find(t=>t.rgb===select.value);if(thread){layer.rgb=hexrgb(thread.rgb);layer.name=thread.name;build(false)}});
+       colorControl=select;
+     } else {
+       const picker=document.createElement('input');picker.type='color';picker.value=rgbhex(layer.rgb);picker.setAttribute('aria-label','Цвет слоя '+(index+1));
+       picker.addEventListener('change',()=>{layer.rgb=hexrgb(picker.value);layer.name='Нитка '+(index+1);build(false)});
+       colorControl=picker;
+     }
+     const active=document.createElement('input');active.type='checkbox';active.checked=layer.enabled;active.setAttribute('aria-label','Включить слой '+(index+1));active.addEventListener('change',()=>{layer.enabled=active.checked;build(false)});
+     block.append(colorControl,number,active);row.append(block);
+   });
+ }
+ // Central render lifecycle: the preview is a direct copy of the canvas used to verify DST output.
+ const prevRender=renderRight;
+ renderRight=function(){prevRender();mobileDraw()};
+ const prevPalette=palette;
+ palette=function(){prevPalette();layerButtons()};
+ document.querySelectorAll('[data-mobile-view]').forEach(b=>b.addEventListener('click',()=>{
+   view=b.dataset.mobileView;
+   document.querySelectorAll('[data-mobile-view]').forEach(x=>x.classList.toggle('active',x===b));
+   document.querySelectorAll('.tabs [data-view]').forEach(x=>x.classList.toggle('active',x.dataset.view===view));
+   renderRight();
+ }));
+ // Set initial state; all subsequent render() calls keep it synchronized.
+ mobileDraw();layerButtons();
 })();
 </script></body></html>
